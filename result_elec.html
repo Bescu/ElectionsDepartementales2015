@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title>RésultElec</title>
+		<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+		<script src="decoupage.geojson"></script>
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+		<style>
+        body {
+            padding: 0;
+            margin: 0;
+			overflow:hidden;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+        }
+		.legende {
+			position: absolute;
+			right: 0;
+			top: 0;
+			margin: 0;
+			padding: 1rem;
+			width: 17rem;
+			height: 100%;
+			text-align: left;
+			background: rgba(255,255,255,0.8);
+			color: #333333;
+		}
+		
+		.tour {
+			position: absolute;
+			top: 0;
+			width: 100%;
+			margin: auto;
+			text-align: center;
+		}
+		
+		.tour form {
+			padding: 5px;
+			display: inline-block;
+			width: 12rem;
+			text-align: center;
+			background: rgba(255,255,255,0.8);
+			font-weight: bold;
+			font-size: 18px;
+		}
+		
+		.pourcentage {
+			display:inline-block;
+			font-size:12px;
+			font-weight:bold;
+			margin:0;
+			margin-left:5px;
+			margin-bottom:5px;
+		}
+		
+		h2 {
+			text-align: center;
+		}
+
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<div class="legende" id="legende">
+			<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>
+			<br>
+			<b>Survolez un bureau de vote pour avoir les détails</b>
+		</div>
+		<div class="tour">
+			<form><input type='radio' name='tours' value='tour1' id='tour1' checked="checked">Tour 1 <input type='radio' name='tours' value='tour2' id='tour2'>Tour 2</form>
+		</div>
+		
+		<script type="text/javascript">		
+		
+		// Fonction déclenchée quand on passe sur une feature :
+		
+		function highlightFeature(e) {
+			
+			// legende :
+			
+			html = "<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>";
+			html+= "<br>"
+			if(document.getElementById('tour1').checked){
+				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+				
+				//On range les résultats dans un array puis on les tri
+				scores= [["Union de la Droite",e.target.feature.properties.UD_1tr,'#001eff'],["Front National",e.target.feature.properties.FN_1tr,'#001237'],["Union de la Gauche",e.target.feature.properties.UG_1tr,'#ff7dc0'],["Front de Gauche",e.target.feature.properties.FG_1tr,'#d00000']];
+				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
+				totalExp=e.target.feature.properties.UD_1tr+e.target.feature.properties.FN_1tr+e.target.feature.properties.UG_1tr+e.target.feature.properties.FG_1tr;
+
+				//Affichage des résultats
+				for (x in scores){
+					pourcentage=(scores[x][1]/totalExp*100).toFixed(2);
+					html+= scores[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+scores[x][2]+"; color:" +scores[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+				};
+				participation=(totalExp/e.target.feature.properties.ins_1tr*100).toFixed(2);
+				abstention=100-participation;
+				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+			
+			}else if(document.getElementById('tour2').checked){
+				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+				
+				//On range les résultats dans un array puis on les tri
+				scores= [["Union de la Droite",e.target.feature.properties.UD_2tr,'#001eff'],["Front National",e.target.feature.properties.FN_2tr,'#001237']];
+				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
+				totalExp=e.target.feature.properties.UD_2tr+e.target.feature.properties.FN_2tr
+
+				//Affichage des résultats
+				for (x in scores){
+					pourcentage=(scores[x][1]/totalExp*100).toFixed(2);
+					html+= scores[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+scores[x][2]+"; color:" +scores[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+				};
+				participation=(totalExp/e.target.feature.properties.ins_2tr*100).toFixed(2);
+				abstention=100-participation;
+				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+			};
+			document.getElementById('legende').innerHTML = html;
+			
+			// style du feature :
+			
+			e.target.setStyle({weight: 4, fillOpacity: 0.8})
+			
+		};
+		
+		// Fonction déclenchée quand on quitte une feature :
+		function resetHighlight(e) {
+			html = "<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>";
+			html+= "<br>"
+			html+= "<b>Survolez un bureau de vote pour avoir les détails</b>"
+			document.getElementById('legende').innerHTML = html;
+			e.target.setStyle(styleBase)
+		};
+		
+		// Fonction choix de couleur des features
+		
+		function couleurFeature(feature, layer) {
+			if(document.getElementById('tour1').checked){
+				//On range les résultats dans un array puis on les tri
+				scores= [["UD_1tr",feature.properties.UD_1tr],["FN_1tr",feature.properties.FN_1tr],["UG_1tr",feature.properties.UG_1tr],["FG_1tr",feature.properties.FG_1tr]];
+				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
+				
+				//On donne une couleur selon le parti en tête
+				if (scores[0][0]=="UD_1tr"){
+					layer.setStyle({fillColor: '#001eff'});
+				}else if (scores[0][0]=="FN_1tr"){
+					layer.setStyle({fillColor: '#001237'});
+				}else if (scores[0][0]=="UG_1tr"){
+					layer.setStyle({fillColor: '#ff7dc0'});
+				}else if (scores[0][0]=="FG_1tr"){
+					layer.setStyle({fillColor: '#d00000'});
+				};
+			} else if (document.getElementById('tour2').checked){
+				//On range les résultats dans un array puis on les tri
+				scores= [["UD_2tr",feature.properties.UD_2tr],["FN_2tr",feature.properties.FN_2tr]];
+				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
+				
+				//On donne une couleur selon le parti en tête
+				if (scores[0][0]=="UD_2tr"){
+					layer.setStyle({fillColor: '#001eff'});
+				}else if (scores[0][0]=="FN_2tr"){
+					layer.setStyle({fillColor: '#001237'});
+				};
+			};
+		};
+		
+		// Fontion déclenchée au clic sur un bouton radio :
+		
+		function changeTour(e){
+			myLayer.eachLayer(function(layer){
+				feature=layer.feature;
+				couleurFeature(feature,layer);
+			});
+		};
+				
+		// Fonctions bouclées pour chaque feature :
+		
+		function onEachFeature(feature, layer){
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight
+			});
+			
+			couleurFeature(feature, layer);
+		};
+		
+		// objet carte
+		
+		var map = L.map('map').setView([50.363, 3.52], 14);
+		
+		// fond de plan (ici MapQuest)
+		
+		L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png').addTo(map);
+		
+		// Style des polygones
+		
+		var styleBase = {fillOpacity: 0.6,
+			weight: 1,
+			opacity: 1,
+			color: 'black'
+		};
+		
+		// Ajoute notre couche à la carte
+		
+		var myLayer = L.geoJson(decoupage,{
+			onEachFeature: onEachFeature,
+			style: styleBase
+		}).addTo(map);
+		
+		// Listener sur les boutons radios
+		
+		document.getElementById("tour1").addEventListener("click",changeTour);
+		document.getElementById("tour2").addEventListener("click",changeTour);
+		</script>
+    </body>
+</html>
