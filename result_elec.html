@@ -3,6 +3,14 @@
 	<head>
 		<title>RésultElec</title>
 		<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+		<script src="src/Label.js"></script>
+		<script src="src/BaseMarkerMethods.js"></script>
+		<script src="src/Marker.Label.js"></script>
+		<script src="src/CircleMarker.Label.js"></script>
+		<script src="src/Path.Label.js"></script>
+		<script src="src/Map.Label.js"></script>
+		<script src="src/FeatureGroup.Label.js"></script>
+		<script src="bureaux.geojson"></script>
 		<script src="decoupage.geojson"></script>
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
 		<style>
@@ -59,6 +67,32 @@
 			text-align: center;
 		}
 
+		.leaflet-label-petit {
+			color: #111;
+			display: block;
+			font: 8px "Helvetica Neue", Arial, Helvetica, sans-serif;
+			font-weight: bold;
+			position: absolute;
+			z-index: 6;
+			-webkit-user-select: none;
+			   -moz-user-select: none;
+				-ms-user-select: none;
+					user-select: none;
+		}
+		
+		.leaflet-label-grand {
+			color: #111;
+			display: block;
+			font: 15px "Helvetica Neue", Arial, Helvetica, sans-serif;
+			font-weight: bold;
+			position: absolute;
+			z-index: 6;
+			-webkit-user-select: none;
+			   -moz-user-select: none;
+				-ms-user-select: none;
+					user-select: none;
+		}
+		
 		</style>
 	</head>
 	<body>
@@ -83,7 +117,7 @@
 			html = "<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>";
 			html+= "<br>"
 			if(document.getElementById('tour1').checked){
-				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
 				
 				//On range les résultats dans un array puis on les tri
 				scores= [["Union de la Droite",e.target.feature.properties.UD_1tr,'#001eff'],["Front National",e.target.feature.properties.FN_1tr,'#001237'],["Union de la Gauche",e.target.feature.properties.UG_1tr,'#ff7dc0'],["Front de Gauche",e.target.feature.properties.FG_1tr,'#d00000']];
@@ -102,7 +136,7 @@
 				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
 			
 			}else if(document.getElementById('tour2').checked){
-				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
 				
 				//On range les résultats dans un array puis on les tri
 				scores= [["Union de la Droite",e.target.feature.properties.UD_2tr,'#001eff'],["Front National",e.target.feature.properties.FN_2tr,'#001237']];
@@ -124,7 +158,13 @@
 			
 			// style du feature :
 			
-			e.target.setStyle({weight: 4, fillOpacity: 0.8})
+			e.target.setStyle({weight: 4, fillOpacity: 0.8});
+			
+			// mise en valeur du bureau de vote :
+			
+			bureauSelect=e.target.feature.properties.ID_BUREAU;
+			bureauOn=bureaux.getLayers()[bureauSelect-1];
+			bureauOnMarker=L.marker(bureauOn._latlng,{icon: iconBureauSelect,opacity:1,zIndexOffset:1000,clickable:false}).bindLabel(bureauOn.feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-grand"}).addTo(map);
 			
 		};
 		
@@ -134,7 +174,8 @@
 			html+= "<br>"
 			html+= "<b>Survolez un bureau de vote pour avoir les détails</b>"
 			document.getElementById('legende').innerHTML = html;
-			e.target.setStyle(styleBase)
+			e.target.setStyle(styleBase);
+			map.removeLayer(bureauOnMarker);
 		};
 		
 		// Fonction choix de couleur des features
@@ -172,7 +213,7 @@
 		// Fontion déclenchée au clic sur un bouton radio :
 		
 		function changeTour(e){
-			myLayer.eachLayer(function(layer){
+			zoneElec.eachLayer(function(layer){
 				feature=layer.feature;
 				couleurFeature(feature,layer);
 			});
@@ -205,12 +246,33 @@
 			color: 'black'
 		};
 		
-		// Ajoute notre couche à la carte
+		// Ajoute la couche des zones électorales à la carte
 		
-		var myLayer = L.geoJson(decoupage,{
+		var zoneElec = L.geoJson(decoupage,{
 			onEachFeature: onEachFeature,
 			style: styleBase
 		}).addTo(map);
+		
+		// Markers bureau de vote
+		
+		var iconBureau = L.icon({
+			iconUrl:'urne.svg',
+			iconSize: [25,25],
+			iconAnchor:  [12.5,12.5],
+			labelAnchor: [-17,16]});
+			
+		var iconBureauSelect = L.icon({
+			iconUrl:'urne.svg',
+			iconSize: [40,40],
+			iconAnchor:  [20,23],
+			labelAnchor: [-22,12]});
+						
+		// Ajoute la couche des bureaux de vote à la carte
+		
+		var bureaux = L.geoJson(bureaux, {
+			pointToLayer: function (feature, latlng){
+				return L.marker(latlng,{icon: iconBureau,opacity:0.8,clickable:false}).bindLabel(feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-petit"})}}).addTo(map);
+		
 		
 		// Listener sur les boutons radios
 		
