@@ -120,7 +120,7 @@
 				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
 				
 				//On range les résultats dans un array puis on les tri
-				scores= [["Union de la Droite",e.target.feature.properties.UD_1tr,'#001eff'],["Front National",e.target.feature.properties.FN_1tr,'#001237'],["Union de la Gauche",e.target.feature.properties.UG_1tr,'#ff7dc0'],["Front de Gauche",e.target.feature.properties.FG_1tr,'#d00000']];
+				scores= [["Union de la Droite",e.target.feature.properties.UD_1tr,'#001eff'],["Front National",e.target.feature.properties.FN_1tr,'#020e40'],["Union de la Gauche",e.target.feature.properties.UG_1tr,'#ff7dc0'],["Front de Gauche",e.target.feature.properties.FG_1tr,'#d00000']];
 				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
 				totalExp=e.target.feature.properties.UD_1tr+e.target.feature.properties.FN_1tr+e.target.feature.properties.UG_1tr+e.target.feature.properties.FG_1tr;
 
@@ -139,7 +139,7 @@
 				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
 				
 				//On range les résultats dans un array puis on les tri
-				scores= [["Union de la Droite",e.target.feature.properties.UD_2tr,'#001eff'],["Front National",e.target.feature.properties.FN_2tr,'#001237']];
+				scores= [["Union de la Droite",e.target.feature.properties.UD_2tr,'#001eff'],["Front National",e.target.feature.properties.FN_2tr,'#020e40']];
 				scores.sort(function(a,b) {return a[1]-b[1]}).reverse();
 				totalExp=e.target.feature.properties.UD_2tr+e.target.feature.properties.FN_2tr
 
@@ -158,13 +158,16 @@
 			
 			// style du feature :
 			
-			e.target.setStyle({weight: 4, fillOpacity: 0.8});
+			e.target.setStyle({weight: 4, fillOpacity: 0.9});
 			
 			// mise en valeur du bureau de vote :
 			
 			bureauSelect=e.target.feature.properties.ID_BUREAU;
 			bureauOn=bureaux.getLayers()[bureauSelect-1];
-			bureauOnMarker=L.marker(bureauOn._latlng,{icon: iconBureauSelect,opacity:1,zIndexOffset:1000,clickable:false}).bindLabel(bureauOn.feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-grand"}).addTo(map);
+			bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:5px;bottom:20px'>"+bureauSelect+"</p>");
+			bureauOn.setIcon(iconBureauSelect);
+			bureauOn.setZIndexOffset(1000);
+			bureauOn.setOpacity(1);
 			
 		};
 		
@@ -175,7 +178,10 @@
 			html+= "<b>Survolez un bureau de vote pour avoir les détails</b>"
 			document.getElementById('legende').innerHTML = html;
 			e.target.setStyle(styleBase);
-			map.removeLayer(bureauOnMarker);
+			bureauOn.updateLabelContent("<p style='font-size:8px;position:relative;right:0px;bottom:7px'>"+bureauSelect+"</p>");
+			bureauOn.setIcon(iconBureau);
+			bureauOn.setZIndexOffset(-1000);
+			bureauOn.setOpacity(0.8);			
 		};
 		
 		// Fonction choix de couleur des features
@@ -190,7 +196,7 @@
 				if (scores[0][0]=="UD_1tr"){
 					layer.setStyle({fillColor: '#001eff'});
 				}else if (scores[0][0]=="FN_1tr"){
-					layer.setStyle({fillColor: '#001237'});
+					layer.setStyle({fillColor: '#020e40'});
 				}else if (scores[0][0]=="UG_1tr"){
 					layer.setStyle({fillColor: '#ff7dc0'});
 				}else if (scores[0][0]=="FG_1tr"){
@@ -205,7 +211,7 @@
 				if (scores[0][0]=="UD_2tr"){
 					layer.setStyle({fillColor: '#001eff'});
 				}else if (scores[0][0]=="FN_2tr"){
-					layer.setStyle({fillColor: '#001237'});
+					layer.setStyle({fillColor: '#020e40'});
 				};
 			};
 		};
@@ -240,7 +246,7 @@
 		
 		// Style des polygones
 		
-		var styleBase = {fillOpacity: 0.6,
+		var styleBase = {fillOpacity: 0.75,
 			weight: 1,
 			opacity: 1,
 			color: 'black'
@@ -262,10 +268,10 @@
 			labelAnchor: [-17,16]});
 			
 		var iconBureauSelect = L.icon({
-			iconUrl:'urne.svg',
-			iconSize: [40,40],
-			iconAnchor:  [20,23],
-			labelAnchor: [-22,12]});
+			iconUrl:'urne_lueur.svg',
+			iconSize: [60,60],
+			iconAnchor:  [30,33],
+			labelAnchor: [-100,12]});
 						
 		// Ajoute la couche des bureaux de vote à la carte
 		
