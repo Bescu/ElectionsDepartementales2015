@@ -164,7 +164,11 @@
 			
 			bureauSelect=e.target.feature.properties.ID_BUREAU;
 			bureauOn=bureaux.getLayers()[bureauSelect-1];
-			bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:5px;bottom:20px'>"+bureauSelect+"</p>");
+			if (bureauSelect<10){
+				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:3px;bottom:20px'>"+bureauSelect+"</p>");
+			}else{
+				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:4.5px;bottom:20px'>"+bureauSelect+"</p>");
+			};
 			bureauOn.setIcon(iconBureauSelect);
 			bureauOn.setZIndexOffset(1000);
 			bureauOn.setOpacity(1);
@@ -179,7 +183,12 @@
 			document.getElementById('legende').innerHTML = html;
 			e.target.setStyle(styleBase);
 			bureauOn.updateLabelContent("<p style='font-size:8px;position:relative;right:0px;bottom:7px'>"+bureauSelect+"</p>");
-			bureauOn.setIcon(iconBureau);
+			if (bureauSelect<10){
+				bureauOn.setIcon(iconBureau_1chiffre);
+			}else{
+				bureauOn.setIcon(iconBureau_2chiffres);
+			};
+			bureauOn.setZIndexOffset(1000);
 			bureauOn.setZIndexOffset(-1000);
 			bureauOn.setOpacity(0.8);			
 		};
@@ -261,25 +270,36 @@
 		
 		// Markers bureau de vote
 		
-		var iconBureau = L.icon({
+		var iconBureau_1chiffre = L.icon({
 			iconUrl:'urne.svg',
 			iconSize: [25,25],
 			iconAnchor:  [12.5,12.5],
-			labelAnchor: [-17,16]});
+			labelAnchor: [-15,16]});
+			
+		var iconBureau_2chiffres = L.icon({
+			iconUrl:'urne.svg',
+			iconSize: [25,25],
+			iconAnchor:  [12.5,12.5],
+			labelAnchor: [-18,16]});
 			
 		var iconBureauSelect = L.icon({
 			iconUrl:'urne_lueur.svg',
 			iconSize: [60,60],
 			iconAnchor:  [30,33],
 			labelAnchor: [-100,12]});
+			
 						
 		// Ajoute la couche des bureaux de vote à la carte
 		
 		var bureaux = L.geoJson(bureaux, {
 			pointToLayer: function (feature, latlng){
-				return L.marker(latlng,{icon: iconBureau,opacity:0.8,clickable:false}).bindLabel(feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-petit"})}}).addTo(map);
-		
-		
+				if(feature.properties.ID_BUREAU < 10){
+					return L.marker(latlng,{icon: iconBureau_1chiffre,opacity:0.8,clickable:false}).bindLabel(feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-petit"});
+				} else {
+					return L.marker(latlng,{icon: iconBureau_2chiffres,opacity:0.8,clickable:false}).bindLabel(feature.properties.ID_BUREAU.toString(), {noHide: true,className: "leaflet-label-petit"});
+				};
+			}}).addTo(map);
+				
 		// Listener sur les boutons radios
 		
 		document.getElementById("tour1").addEventListener("click",changeTour);
