@@ -165,9 +165,9 @@
 			bureauSelect=e.target.feature.properties.ID_BUREAU;
 			bureauOn=bureaux.getLayers()[bureauSelect-1];
 			if (bureauSelect<10){
-				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:3px;bottom:20px'>"+bureauSelect+"</p>");
+				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:3px;bottom:19px'>"+bureauSelect+"</p>");
 			}else{
-				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:4.5px;bottom:20px'>"+bureauSelect+"</p>");
+				bureauOn.updateLabelContent("<p style='font-size:15px;position:relative;right:4.5px;bottom:19px'>"+bureauSelect+"</p>");
 			};
 			bureauOn.setIcon(iconBureauSelect);
 			bureauOn.setZIndexOffset(1000);
@@ -274,13 +274,13 @@
 			iconUrl:'urne.svg',
 			iconSize: [25,25],
 			iconAnchor:  [12.5,12.5],
-			labelAnchor: [-15,16]});
+			labelAnchor: [-15,15]});
 			
 		var iconBureau_2chiffres = L.icon({
 			iconUrl:'urne.svg',
 			iconSize: [25,25],
 			iconAnchor:  [12.5,12.5],
-			labelAnchor: [-18,16]});
+			labelAnchor: [-18,15]});
 			
 		var iconBureauSelect = L.icon({
 			iconUrl:'urne_lueur.svg',
