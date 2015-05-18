@@ -34,6 +34,12 @@
 			text-align: left;
 			background: rgba(255,255,255,0.8);
 			color: #333333;
+			font-size: 12px;
+		}
+		
+		#survolez {
+			text-align: center;
+			font-size: 14px;
 		}
 		
 		.tour {
@@ -97,11 +103,7 @@
 	</head>
 	<body>
 		<div id="map"></div>
-		<div class="legende" id="legende">
-			<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>
-			<br>
-			<b>Survolez un bureau de vote pour avoir les détails</b>
-		</div>
+		<div class="legende" id="legende"></div>
 		<div class="tour">
 			<form><input type='radio' name='tours' value='tour1' id='tour1' checked="checked">Tour 1 <input type='radio' name='tours' value='tour2' id='tour2'>Tour 2</form>
 		</div>
@@ -111,6 +113,7 @@
 		// Variable à modifier :
 		
 			// [["nom du parti","nom du champs des resultats de ce parti (en nombre de voix)","couleur du parti"][...]]
+			// Le geojson doit comporter un champs ins_1tr et ins_2tr avec le nombre d'inscrits sur les listes par bureau
 
 		var tour1=[["Union de la Droite","UD_1tr",'#001eff'],
 				["Front National","FN_1tr",'#020e40'],
@@ -122,14 +125,85 @@
 		
 		var nomElections="Départementales 2015";
 		
+		// Légende quand aucun périmètre n'est survolé
+		
+		function legendeGenerale() {
+			html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2>";
+			html+= "<br>";
+			html+="<p id='survolez'><b><u>Survolez les différents zonages pour avoir le détail par bureau de vote</u></b></p>";
+			
+			if(document.getElementById('tour1').checked){
+				//On calcule les totaux, on les range dans un array puis on les tri
+				totalIns_1tr=0;
+				zoneElec.eachLayer(function(layer){
+						totalIns_1tr+=layer.feature.properties.ins_1tr;
+					});
+				totalTour1=[];
+				tour1.forEach(function(a){
+					totalPart=0;
+					zoneElec.eachLayer(function(layer){
+						totalPart+=layer.feature.properties[a[1]];
+					});
+					totalTour1.push([a[0],a[1],totalPart,a[2]]);
+				});
+				totalTour1.sort(function(a,b) {return a[2]-b[2]}).reverse();
+				//Somme des voix exprimées
+				totalExp=0;
+				totalTour1.forEach(function(a){totalExp += a[2]});
+				//Affichage des résultats
+				html+="<b>Résultats du 1<SUP>er</SUP> tour pour l'ensemble de la commune : </b><br><br>";
+				for (x in totalTour1){
+					pourcentage=(totalTour1[x][2]/totalExp*100).toFixed(2);
+					html+= totalTour1[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour1[x][3]+"; color:" +totalTour1[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+				};
+				participation=(totalExp/totalIns_1tr*100).toFixed(2);
+				abstention=100-participation;
+				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+				
+			}else if(document.getElementById('tour2').checked){
+				//On calcule les totaux, on les range dans un array puis on les tri
+				totalIns_2tr=0;
+				zoneElec.eachLayer(function(layer){
+						totalIns_2tr+=layer.feature.properties.ins_2tr;
+					});
+				totalTour2=[];
+				tour2.forEach(function(a){
+					totalPart=0;
+					zoneElec.eachLayer(function(layer){
+						totalPart+=layer.feature.properties[a[1]];
+					});
+					totalTour2.push([a[0],a[1],totalPart,a[2]]);
+				});
+				totalTour2.sort(function(a,b) {return a[2]-b[2]}).reverse();
+				//Somme des voix exprimées
+				totalExp=0;
+				totalTour2.forEach(function(a){totalExp += a[2]});
+				//Affichage des résultats
+				html+="<b>Résultats du 2<SUP>er</SUP> tour pour l'ensemble de la commune : </b><br><br>";
+				for (x in totalTour2){
+					pourcentage=(totalTour2[x][2]/totalExp*100).toFixed(2);
+					html+= totalTour2[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour2[x][3]+"; color:" +totalTour2[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+				};
+				participation=(totalExp/totalIns_2tr*100).toFixed(2);
+				abstention=100-participation;
+				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+			};
+			document.getElementById('legende').innerHTML = html;
+		};
+		
+		
 		// Fonction déclenchée quand on passe sur une feature :
 		
 		function highlightFeature(e) {
-			
+		
 			// legende :
 			
 			html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2>";
-			html+= "<br>"
+			html+= "<br>";
 			if(document.getElementById('tour1').checked){
 				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
 				
@@ -195,10 +269,7 @@
 		
 		// Fonction déclenchée quand on quitte une feature :
 		function resetHighlight(e) {
-			html = "<h2>Résultat Élections Départementales 2015<br>Valenciennes</h2>";
-			html+= "<br>"
-			html+= "<b>Survolez un bureau de vote pour avoir les détails</b>"
-			document.getElementById('legende').innerHTML = html;
+			legendeGenerale()
 			e.target.setStyle(styleBase);
 			bureauOn.updateLabelContent("<p style='font-size:8px;position:relative;right:0px;bottom:7px'>"+bureauSelect+"</p>");
 			if (bureauSelect<10){
@@ -231,6 +302,7 @@
 		// Fontion déclenchée au clic sur un bouton radio :
 		
 		function changeTour(e){
+			legendeGenerale();
 			zoneElec.eachLayer(function(layer){
 				feature=layer.feature;
 				couleurFeature(feature,layer);
@@ -307,6 +379,10 @@
 		
 		document.getElementById("tour1").addEventListener("click",changeTour);
 		document.getElementById("tour2").addEventListener("click",changeTour);
+		
+		// Balance la légende générale :
+		
+		legendeGenerale()
 		</script>
     </body>
 </html>
