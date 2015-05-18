@@ -69,6 +69,14 @@
 			margin-bottom:5px;
 		}
 		
+		.voix {
+			display:inline-block;
+			font-size:9px;
+			margin:0;
+			position:relative;
+			bottom:0.5px;
+		}
+		
 		h2 {
 			text-align: center;
 		}
@@ -154,13 +162,13 @@
 				html+="<b>Résultats du 1<SUP>er</SUP> tour pour l'ensemble de la commune : </b><br><br>";
 				for (x in totalTour1){
 					pourcentage=(totalTour1[x][2]/totalExp*100).toFixed(2);
-					html+= totalTour1[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour1[x][3]+"; color:" +totalTour1[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					html+= totalTour1[x][0] + " : <p class='voix'>(" + totalTour1[x][2] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour1[x][3]+"; color:" +totalTour1[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
 				};
 				participation=(totalExp/totalIns_1tr*100).toFixed(2);
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_1tr+" inscrits)</p>";
 				
 			}else if(document.getElementById('tour2').checked){
 				//On calcule les totaux, on les range dans un array puis on les tri
@@ -184,13 +192,13 @@
 				html+="<b>Résultats du 2<SUP>er</SUP> tour pour l'ensemble de la commune : </b><br><br>";
 				for (x in totalTour2){
 					pourcentage=(totalTour2[x][2]/totalExp*100).toFixed(2);
-					html+= totalTour2[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour2[x][3]+"; color:" +totalTour2[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					html+= totalTour2[x][0] + " : <p class='voix'>(" + totalTour2[x][2] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+totalTour2[x][3]+"; color:" +totalTour2[x][3]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
 				};
 				participation=(totalExp/totalIns_2tr*100).toFixed(2);
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_2tr+" inscrits)</p>";
 			};
 			document.getElementById('legende').innerHTML = html;
 		};
@@ -217,13 +225,13 @@
 				//Affichage des résultats
 				for (x in tour1){
 					pourcentage=(e.target.feature.properties[tour1[x][1]]/totalExp*100).toFixed(2);
-					html+= tour1[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour1[x][2]+"; color:" +tour1[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					html+= tour1[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour1[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour1[x][2]+"; color:" +tour1[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
 				};
 				participation=(totalExp/e.target.feature.properties.ins_1tr*100).toFixed(2);
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_1tr+" inscrits)</p>";
 			
 			}else if(document.getElementById('tour2').checked){
 				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
@@ -238,13 +246,13 @@
 				//Affichage des résultats
 				for (x in tour2){
 					pourcentage=(e.target.feature.properties[tour2[x][1]]/totalExp*100).toFixed(2);
-					html+= tour2[x][0] + " : <br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour2[x][2]+"; color:" +tour2[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					html+= tour2[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour2[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour2[x][2]+"; color:" +tour2[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
 				};
 				participation=(totalExp/e.target.feature.properties.ins_2tr*100).toFixed(2);
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " %</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_2tr+" inscrits)</p>";
 			};
 			document.getElementById('legende').innerHTML = html;
 			
