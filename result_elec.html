@@ -12,6 +12,7 @@
 		<script src="src/FeatureGroup.Label.js"></script>
 		<script src="bureaux.geojson"></script>
 		<script src="decoupage.geojson"></script>
+		<script type="text/javascript" src="geostats.min.js"></script>
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
 		<style>
         body {
@@ -107,6 +108,35 @@
 					user-select: none;
 		}
 		
+		.menuAnalyse {
+			margin-top: 50px;
+			text-align: center;
+			font-size: 14px;
+			font-weight: bold;
+		}
+		
+		select {
+			text-align: center;
+			display: block;
+			margin: 0 auto;
+			margin-top: 20px;
+		}
+		
+		.classifLegende {
+			margin-top: 20px;
+		}
+		
+		#retourCartoGenerale {
+			margin-top: 20px;
+		}
+		
+		#resultBureau {
+			margin-top: 40px;
+			font-size: 14px;
+			text-align: center;
+			line-height: 2;
+		}
+		
 		</style>
 	</head>
 	<body>
@@ -120,25 +150,24 @@
 		
 		// Variable à modifier :
 		
-			// [["nom du parti","nom du champs des resultats de ce parti (en nombre de voix)","couleur du parti"][...]]
+			// [["nom du parti","nom du champs des resultats de ce parti (en nombre de voix)","couleur du parti(en rgb)"],[...]]
 			// Le geojson doit comporter un champs ins_1tr et ins_2tr avec le nombre d'inscrits sur les listes par bureau
 
-		var tour1=[["Union de la Droite","UD_1tr",'#001eff'],
-				["Front National","FN_1tr",'#020e40'],
-				["Union de la Gauche","UG_1tr",'#ff7dc0'],
-				["Front de Gauche","FG_1tr",'#d00000']];
+		var tour1=[["Union de la Droite","UD_1tr",'rgb(0,30,255)'],
+				["Front National","FN_1tr",'rgb(2,14,64)'],
+				["Union de la Gauche","UG_1tr",'rgb(255,125,192)'],
+				["Front de Gauche","FG_1tr",'rgb(208,0,0)']];
 				
-		var tour2=[["Union de la Droite","UD_2tr",'#001eff'],
-				["Front National","FN_2tr",'#020e40']];
+		var tour2=[["Union de la Droite","UD_2tr",'rgb(0,30,255)'],
+				["Front National","FN_2tr",'rgb(2,14,64)']];
 		
 		var nomElections="Départementales 2015";
 		
-		// Légende quand aucun périmètre n'est survolé
+		// Légende
 		
 		function legendeGenerale() {
-			html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2>";
-			html+= "<br>";
-			html+="<p id='survolez'><b><u>Survolez les différents zonages pour avoir le détail par bureau de vote</u></b></p>";
+			html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2><br>";
+			html+="<div id='coeurLegende'><p id='survolez'><b><u>Survolez les différents zonages pour avoir le détail par bureau de vote</u></b></p>";
 			
 			if(document.getElementById('tour1').checked){
 				//On calcule les totaux, on les range dans un array puis on les tri
@@ -168,7 +197,7 @@
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_1tr+" inscrits)</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_1tr+" inscrits)</p></div>";
 				
 			}else if(document.getElementById('tour2').checked){
 				//On calcule les totaux, on les range dans un array puis on les tri
@@ -198,67 +227,221 @@
 				abstention=100-participation;
 				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
 				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_2tr+" inscrits)</p>";
+				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +totalIns_2tr+" inscrits)</p></div>";
 			};
+			
+			html+="<div id='resultBureau'></div>";
+			
+			// Menu analyse par partis
+			
+			html+="<div class='menuAnalyse'><u>Analyser un parti :</u>";
+			html+="<form><select name='parti' id='parti' onChange='analyseParti()'>";
+			html+="<option value='choix' id='choix'>Choisissez un parti</option>";
+			if(document.getElementById('tour1').checked){
+				for (x in tour1){
+					html+="<option value='"+tour1[x][1]+"'>"+tour1[x][0]+"</option>";
+				};
+			}else if(document.getElementById('tour2').checked){
+				for (x in tour2){
+					html+="<option value='"+tour2[x][1]+"'>"+tour2[x][0]+"</option>";
+				};
+			};
+			html+="<option value='abstention'>Abstention</option></select></form>";
+			html+="<div id='retourCartoGenerale'></div></div>"
 			document.getElementById('legende').innerHTML = html;
+			
 		};
 		
+		// Fonction analyse par partis
+		
+		function analyseParti() {
+		
+			// On enlève le titre de la liste déroulante "choix" une fois qu'on a choisi un parti
+			if (document.getElementById('parti')[0].value=="choix"){
+				document.getElementById('parti').remove(0);
+			};
+			// Indicateur qu'on passe sur une analyse par parti
+			indAnalyse=1;
+			// Le parti sélectionné
+			selectParti=document.getElementById('parti').value;
+			// On récupére tous les pourcentage dans un tableau pour faire la classification
+			tableClassif=[];
+			zoneElec.eachLayer(function(layer){
+				if(document.getElementById('tour1').checked){
+					//Somme des voix exprimées
+					totalExp=0;
+					tour1.forEach(function(a){totalExp += layer.feature.properties[a[1]]});
+				}else if(document.getElementById('tour2').checked){
+					//Somme des voix exprimées
+					totalExp=0;
+					tour2.forEach(function(a){totalExp += layer.feature.properties[a[1]]});
+				};
+				if(selectParti=="abstention"){
+					if(document.getElementById('tour1').checked){
+						tableClassif.push(100-((totalExp/layer.feature.properties.ins_1tr*100).toFixed(2)));
+					}else if(document.getElementById('tour2').checked){
+						tableClassif.push(100-((totalExp/layer.feature.properties.ins_2tr*100).toFixed(2)));
+					};
+				}else{
+					nbVote=layer.feature.properties[selectParti];
+					tableClassif.push((nbVote/totalExp*100));
+				};
+			});
+			// classification de Jenks grâce à la bibliothèque geostats https://github.com/simogeo/geostats
+			serie=new geostats(tableClassif);
+			serie.setPrecision(2);
+			classif=serie.getJenks(4);
+			// pour chaque zone on recalcule son pourcentage et on applique les actions voulues (changement de couleur etc...)			
+			zoneElec.eachLayer(function(layer){
+				if(document.getElementById('tour1').checked){
+					//Somme des voix exprimées
+					totalExp=0;
+					tour1.forEach(function(a){totalExp += layer.feature.properties[a[1]]});
+				}else if(document.getElementById('tour2').checked){
+					//Somme des voix exprimées
+					totalExp=0;
+					tour2.forEach(function(a){totalExp += layer.feature.properties[a[1]]});
+				};
+				if(selectParti=="abstention"){
+					if(document.getElementById('tour1').checked){
+						pourcentage=100-((totalExp/layer.feature.properties.ins_1tr*100).toFixed(2));
+					}else if(document.getElementById('tour2').checked){
+						pourcentage=100-((totalExp/layer.feature.properties.ins_2tr*100).toFixed(2));
+					};
+				}else{
+					pourcentage=(layer.feature.properties[selectParti]/totalExp*100).toFixed(2);
+				};
+				// On va chercher la bonne couleur
+				if(selectParti=="abstention"){
+					couleur="rgb(0,0,0)";
+				}else{
+					if(document.getElementById('tour1').checked){
+						for (x in tour1){
+							if (tour1[x][1]==selectParti){
+								couleur=tour1[x][2];
+							}
+						}
+					}else if(document.getElementById('tour2').checked){
+						for (x in tour2){
+							if (tour2[x][1]==selectParti){
+								couleur=tour2[x][2];
+							}
+						}
+					}
+				};
+				layer.setStyle({fillColor: couleur})
+				// comparaison avec les bornes de notre classification
+				if (pourcentage<classif[1]){
+					layer.setStyle({fillOpacity: 0.1});
+				}else if (pourcentage>=classif[1] && pourcentage<classif[2]){
+					layer.setStyle({fillOpacity: 0.5});
+				}else if (pourcentage>=classif[2] && pourcentage<classif[3]){
+					layer.setStyle({fillOpacity: 0.8});
+				}else if (pourcentage>=classif[3]){
+					layer.setStyle({fillOpacity: 0.95});
+				};
+			});
+			// On va chercher le nom du parti
+			if(selectParti=="abstention"){
+				nomParti="Abstention";
+			}else{
+				if(document.getElementById('tour1').checked){
+					for (x in tour1){
+						if (tour1[x][1]==selectParti){
+							nomParti=tour1[x][0];
+						}
+					}
+				}else if(document.getElementById('tour2').checked){
+					for (x in tour2){
+						if (tour2[x][1]==selectParti){
+							nomParti=tour2[x][0];
+						}
+					}
+				}
+			};
+			html="<div class='coeurLegende'><b>Classification des votes du parti " + nomParti + " :</b><br>";
+			html+="<li class='classifLegende' style='display:inline-block;width:10%;background-color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.95);color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.95)'>.</li>";
+			html+=" Plus de "+classif[3]+ " %<br>";
+			html+="<li class='classifLegende' style='display:inline-block;width:10%;background-color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.8);color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.8)'>.</li>";
+			html+=" Entre "+classif[2]+ " et " +classif[3]+" %<br>";
+			html+="<li class='classifLegende' style='display:inline-block;width:10%;background-color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.5);color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.5)'>.</li>";
+			html+=" Entre "+classif[1]+ " et " +classif[2]+" %<br>";
+			html+="<li class='classifLegende' style='display:inline-block;width:10%;background-color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.1);color:" + couleur.substring(0,3)+"a"+couleur.substring(3,couleur.lastIndexOf(")"))+",0.1)'>.</li>";
+			html+=" Moins de "+classif[1]+ " %<br>";
+			document.getElementById('coeurLegende').innerHTML = html;
+			html2="<button onclick='changeTour()'>Retour à la carte générale</button>";
+			document.getElementById('retourCartoGenerale').innerHTML = html2;
+		};
+		
+		function couleurFeature(feature, layer) {
+			if(document.getElementById('tour1').checked){
+				//On range les résultats dans un array puis on les tri
+				tour1.sort(function(a,b) {return feature.properties[a[1]]-feature.properties[b[1]]}).reverse();
+				//On donne une couleur selon le parti en tête
+				layer.setStyle({fillColor: tour1[0][2]});
+				
+			} else if (document.getElementById('tour2').checked){
+				//On range les résultats dans un array puis on les tri
+				tour2.sort(function(a,b) {return feature.properties[a[1]]-feature.properties[b[1]]}).reverse();
+				//On donne une couleur selon le parti en tête
+				layer.setStyle({fillColor: tour2[0][2]});
+			};
+		};
 		
 		// Fonction déclenchée quand on passe sur une feature :
 		
 		function highlightFeature(e) {
 		
-			// legende :
+						
+			// legende Si on n'est pas en analyse par parti :
 			
-			html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2>";
-			html+= "<br>";
-			if(document.getElementById('tour1').checked){
-				html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+			if (indAnalyse==0){
+				html = "<h2>Résultat Élections "+ nomElections +"<br>Valenciennes</h2>";
+				html+= "<br>";
+				if(document.getElementById('tour1').checked){
+					html+= "<b>Résultats du 1<SUP>er</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+					
+					//On range les résultats dans un array puis on les tri
+					tour1.sort(function(a,b) {
+						return e.target.feature.properties[a[1]]-e.target.feature.properties[b[1]];
+					}).reverse();
+					//Somme des voix exprimées
+					totalExp=0;
+					tour1.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
+					//Affichage des résultats
+					for (x in tour1){
+						pourcentage=(e.target.feature.properties[tour1[x][1]]/totalExp*100).toFixed(2);
+						html+= tour1[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour1[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour1[x][2]+"; color:" +tour1[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					};
+					participation=(totalExp/e.target.feature.properties.ins_1tr*100).toFixed(2);
+					abstention=100-participation;
+					html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+					html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+					html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_1tr+" inscrits)</p>";
 				
-				//On range les résultats dans un array puis on les tri
-				tour1.sort(function(a,b) {
-					return e.target.feature.properties[a[1]]-e.target.feature.properties[b[1]];
-				}).reverse();
-				//Somme des voix exprimées
-				totalExp=0;
-				tour1.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
-				//Affichage des résultats
-				for (x in tour1){
-					pourcentage=(e.target.feature.properties[tour1[x][1]]/totalExp*100).toFixed(2);
-					html+= tour1[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour1[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour1[x][2]+"; color:" +tour1[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+				}else if(document.getElementById('tour2').checked){
+					html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
+					
+					//On range les résultats dans un array puis on les tri
+					tour2.sort(function(a,b) {
+						return e.target.feature.properties[a[1]]-e.target.feature.properties[b[1]];
+					}).reverse();
+					//Somme des voix exprimées
+					totalExp=0;
+					tour2.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
+					//Affichage des résultats
+					for (x in tour2){
+						pourcentage=(e.target.feature.properties[tour2[x][1]]/totalExp*100).toFixed(2);
+						html+= tour2[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour2[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour2[x][2]+"; color:" +tour2[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
+					};
+					participation=(totalExp/e.target.feature.properties.ins_2tr*100).toFixed(2);
+					abstention=100-participation;
+					html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
+					html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
+					html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_2tr+" inscrits)</p>";
 				};
-				participation=(totalExp/e.target.feature.properties.ins_1tr*100).toFixed(2);
-				abstention=100-participation;
-				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
-				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_1tr+" inscrits)</p>";
-			
-			}else if(document.getElementById('tour2').checked){
-				html+= "<b>Résultats du 2<SUP>ème</SUP> tour au bureau de vote : <br><br>" + e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + "</b><br><br>";		
-				
-				//On range les résultats dans un array puis on les tri
-				tour2.sort(function(a,b) {
-					return e.target.feature.properties[a[1]]-e.target.feature.properties[b[1]];
-				}).reverse();
-				//Somme des voix exprimées
-				totalExp=0;
-				tour2.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
-				//Affichage des résultats
-				for (x in tour2){
-					pourcentage=(e.target.feature.properties[tour2[x][1]]/totalExp*100).toFixed(2);
-					html+= tour2[x][0] + " : <p class='voix'>(" + e.target.feature.properties[tour2[x][1]] + " voix)</p><br>" + "<li style='display:inline-block;width:"+ pourcentage + "%; background-color:"+tour2[x][2]+"; color:" +tour2[x][2]+"'>.</li><p class='pourcentage'> "+ pourcentage + " %</p><br>";
-				};
-				participation=(totalExp/e.target.feature.properties.ins_2tr*100).toFixed(2);
-				abstention=100-participation;
-				html+="<li style='display:inline-block;width:" + participation + "%; background-color:#a0a0a0;color:#a0a0a0;margin-top:35px'>.</li>";
-				html+="<li style='display:inline-block;width:" + abstention + "%; background-color:#d2d2d2;color:#d2d2d2;margin-top:35px'>.</li>";
-				html+="<br>Taux de participation : <p class='pourcentage'>"+ participation + " % </p> <p class='voix'>(" +totalExp+" voix/" +e.target.feature.properties.ins_2tr+" inscrits)</p>";
+				document.getElementById('legende').innerHTML = html;
 			};
-			document.getElementById('legende').innerHTML = html;
-			
-			// style du feature :
-			
-			e.target.setStyle({weight: 4, fillOpacity: 0.9});
 			
 			// mise en valeur du bureau de vote :
 			
@@ -273,12 +456,40 @@
 			bureauOn.setZIndexOffset(1000);
 			bureauOn.setOpacity(1);
 			
+			// Si on n'est pas en analyse par parti :
+			if (indAnalyse==0){	
+				// style du feature :
+				e.target.setStyle({weight: 4, fillOpacity: 0.9});
+			// Si on est en analyse par parti :
+			}else if (indAnalyse==1){
+				// style du feature :
+				e.target.setStyle({weight: 4});
+				// score du parti dans la zone survolées:
+				totalExp=0;
+				if(document.getElementById('tour1').checked){
+					//Somme des voix exprimées
+					tour1.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
+				}else if(document.getElementById('tour2').checked){
+					//Somme des voix exprimées
+					tour2.forEach(function(a){totalExp += e.target.feature.properties[a[1]]});
+				};
+				if(selectParti=="abstention"){
+					if(document.getElementById('tour1').checked){
+						pourcentage=(100-(totalExp/e.target.feature.properties.ins_1tr*100)).toFixed(2);
+					}else if(document.getElementById('tour2').checked){
+						pourcentage=(100-(totalExp/e.target.feature.properties.ins_2tr*100)).toFixed(2);
+					};
+				}else{
+					pourcentage=(e.target.feature.properties[selectParti]/totalExp*100).toFixed(2);
+				};
+				html2="<u>"+e.target.feature.properties.ID_BUREAU + " - " + e.target.feature.properties.DENOM_BURE + " :</u><br><b> " + pourcentage + " %</b>";
+				document.getElementById('resultBureau').innerHTML = html2;
+			};
 		};
 		
 		// Fonction déclenchée quand on quitte une feature :
+		
 		function resetHighlight(e) {
-			legendeGenerale()
-			e.target.setStyle(styleBase);
 			bureauOn.updateLabelContent("<p style='font-size:8px;position:relative;right:0px;bottom:7px'>"+bureauSelect+"</p>");
 			if (bureauSelect<10){
 				bureauOn.setIcon(iconBureau_1chiffre);
@@ -287,7 +498,17 @@
 			};
 			bureauOn.setZIndexOffset(1000);
 			bureauOn.setZIndexOffset(-1000);
-			bureauOn.setOpacity(0.8);			
+			bureauOn.setOpacity(0.8);
+			
+			// Si on n'est pas en analyse par parti :
+			if (indAnalyse==0){
+				e.target.setStyle(styleBase);
+				legendeGenerale()
+			// Si on est en analyse par parti :
+			}else if (indAnalyse==1){
+				e.target.setStyle({weight: 1});
+				document.getElementById('resultBureau').innerHTML = "";
+			};	
 		};
 		
 		// Fonction choix de couleur des features
@@ -310,6 +531,10 @@
 		// Fontion déclenchée au clic sur un bouton radio :
 		
 		function changeTour(e){
+			if (indAnalyse==1){
+				zoneElec.setStyle(styleBase);
+				indAnalyse=0;
+			};
 			legendeGenerale();
 			zoneElec.eachLayer(function(layer){
 				feature=layer.feature;
@@ -327,6 +552,10 @@
 			
 			couleurFeature(feature, layer);
 		};
+		
+		// Indicateur analyse parti
+		
+		indAnalyse=0;
 		
 		// objet carte
 		
@@ -386,7 +615,7 @@
 		// Listener sur les boutons radios
 		
 		document.getElementById("tour1").addEventListener("click",changeTour);
-		document.getElementById("tour2").addEventListener("click",changeTour);
+		document.getElementById("tour2").addEventListener("click",changeTour);	
 		
 		// Balance la légende générale :
 		
