@@ -37,6 +37,7 @@
 			background: rgba(255,255,255,0.8);
 			color: #333333;
 			font-size: 12px;
+			z-index: 2;
 		}
 		
 		#survolez {
@@ -50,6 +51,7 @@
 			width: 100%;
 			margin: auto;
 			text-align: center;
+			z-index: 2;
 		}
 		
 		.tour form {
@@ -121,6 +123,10 @@
 			display: block;
 			margin: 0 auto;
 			margin-top: 20px;
+		}
+		
+		option {
+			text-align: left;
 		}
 		
 		.classifLegende {
@@ -236,7 +242,7 @@
 			// Menu analyse par partis
 			
 			html+="<div class='menuAnalyse'><u>Analyser un parti :</u>";
-			html+="<form><select name='parti' id='parti' onChange='analyseParti()'>";
+			html+="<form><select dir='rtl' name='parti' id='parti' onChange='analyseParti()'>";
 			html+="<option value='choix' id='choix'>Choisissez un parti</option>";
 			if(document.getElementById('tour1').checked){
 				for (x in tour1){
